@@ -19,12 +19,17 @@ SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
 
 # Movement configuration
-PLAYERPACE = 4
-ENEMYPACE = 2
+PLAYER_PACE = 4
+ENEMY_PACE = 2
+SPAWN_INTERVAL = 3000
  
 DISPLAYSURF = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DISPLAYSURF.fill(WHITE)
 pygame.display.set_caption("Game")
+
+# Create a custom event for adding a new enemy
+ADDENEMY = pygame.USEREVENT + 1
+pygame.time.set_timer(ADDENEMY, SPAWN_INTERVAL)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -35,36 +40,38 @@ class Player(pygame.sprite.Sprite):
  
     def update(self):
         pressed_keys = pygame.key.get_pressed()
-        if pressed_keys[K_UP]:
-            self.rect.move_ip(0, -PLAYERPACE)
-        if pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, PLAYERPACE)
+        if self.rect.top > 0:
+            if pressed_keys[K_UP]:
+                self.rect.move_ip(0, -PLAYER_PACE)
+        if self.rect.bottom < SCREEN_HEIGHT:
+            if pressed_keys[K_DOWN]:
+                self.rect.move_ip(0, PLAYER_PACE)
         if self.rect.left > 0:
             if pressed_keys[K_LEFT]:
-                self.rect.move_ip(-PLAYERPACE, 0)
+                self.rect.move_ip(-PLAYER_PACE, 0)
         if self.rect.right < SCREEN_WIDTH:        
             if pressed_keys[K_RIGHT]:
-                self.rect.move_ip(PLAYERPACE, 0)
+                self.rect.move_ip(PLAYER_PACE, 0)
  
     def draw(self, surface):
         pygame.draw.rect(surface, BLUE, self.rect)
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
-        super().__init__() 
+        super().__init__()
         self.rect = Rect(0,0,0,0)
         self.rect.center = (random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT))
         self.rect.size = (10, 10)
 
-    def move(self, player):
+    def update(self, player):
         if self.rect.centerx < player.rect.centerx:
-            mx = ENEMYPACE
+            mx = ENEMY_PACE
         else:
-            mx = -ENEMYPACE
+            mx = -ENEMY_PACE
         if self.rect.centery < player.rect.centery:
-            my = ENEMYPACE
+            my = ENEMY_PACE
         else:
-            my = -ENEMYPACE
+            my = -ENEMY_PACE
         self.rect.move_ip(mx, my)
         # self.rect.center = (random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT))
 
@@ -73,18 +80,25 @@ class Enemy(pygame.sprite.Sprite):
          
 P1 = Player()
 E1 = Enemy()
+enemies = pygame.sprite.Group()
+enemies.add(E1)
  
 while True:     
     for event in pygame.event.get():              
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-    E1.move(P1)
+        elif event.type == ADDENEMY:
+            newEnemy = Enemy()
+            enemies.add(newEnemy)
+
+    enemies.update(P1)
     P1.update()
      
     DISPLAYSURF.fill(WHITE)
     P1.draw(DISPLAYSURF)
-    E1.draw(DISPLAYSURF)
+    for anEnemy in pygame.sprite.Group.sprites(enemies):
+        anEnemy.draw(DISPLAYSURF)
          
     pygame.display.update()
     FramePerSec.tick(FPS)
