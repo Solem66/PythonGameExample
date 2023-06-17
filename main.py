@@ -43,6 +43,7 @@ pygame.time.set_timer(UPDATE_SCORE, 200)
 # Set up Fonts
 font = pygame.font.SysFont("Georgia", 60)
 font_score = pygame.font.SysFont("Georgia", 20)
+game_over = font.render("Game Over", True, BLACK)
 
 # Object classes
 class Player(pygame.sprite.Sprite):
@@ -93,7 +94,7 @@ class Enemy(pygame.sprite.Sprite):
         pygame.draw.rect(surface, RED, self.rect)
 
 # Initialize game
-P1 = Player()
+player = Player()
 E1 = Enemy()
 enemies = pygame.sprite.Group()
 enemies.add(E1)
@@ -107,25 +108,40 @@ while True:
             sys.exit()
         
         if event.type == KEYDOWN:
-            if event.key == K_p:
+            if event.key == K_RETURN:
                 RUNNING = not(RUNNING)
         
         if RUNNING:
             if event.type == ADD_ENEMY:
-                newEnemy = Enemy()
-                enemies.add(newEnemy)
+                numToAdd = SCORE // 50 + 1
+                for i in range(numToAdd):
+                    newEnemy = Enemy()
+                    enemies.add(newEnemy)
             elif event.type == UPDATE_SCORE:
                 SCORE += 1
 
     if RUNNING:
         # Move objects
-        enemies.update(P1)
-        P1.update()
+        enemies.update(player)
+        player.update()
+
+        # Playser is caught - reset the game and pause
+        if pygame.sprite.spritecollideany(player, enemies):
+            DISPLAYSURF.blit(game_over, (150, 150))
+            for anEnemy in enemies:
+                anEnemy.kill()
+            player.rect.center = (300, 300)
+            E1 = Enemy()
+            enemies.add(E1)
+            SCORE = 0
+            RUNNING = False
+            pygame.display.update()
+            continue
         
         # Draw everything
         DISPLAYSURF.fill(WHITE)
-        P1.draw(DISPLAYSURF)
-        for anEnemy in pygame.sprite.Group.sprites(enemies):
+        player.draw(DISPLAYSURF)
+        for anEnemy in enemies:
             anEnemy.draw(DISPLAYSURF)
         scores = font_score.render(str(SCORE), True, BLACK)
         DISPLAYSURF.blit(scores, (10, 10))
