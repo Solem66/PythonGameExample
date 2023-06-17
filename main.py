@@ -23,8 +23,9 @@ PLAYER_PACE = 4
 ENEMY_PACE = 2
 SPAWN_INTERVAL = 3000
 
-# Score
+# Other variables
 SCORE = 0
+RUNNING = True
 
 # Set up game board
 DISPLAYSURF = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -37,7 +38,7 @@ pygame.time.set_timer(ADD_ENEMY, SPAWN_INTERVAL)
 
 # Create a custom event for score update
 UPDATE_SCORE = ADD_ENEMY + 1
-pygame.time.set_timer(UPDATE_SCORE, 100)
+pygame.time.set_timer(UPDATE_SCORE, 200)
 
 # Set up Fonts
 font = pygame.font.SysFont("Georgia", 60)
@@ -104,24 +105,31 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-        elif event.type == ADD_ENEMY:
-            newEnemy = Enemy()
-            enemies.add(newEnemy)
-        elif event.type == UPDATE_SCORE:
-            SCORE += 1
+        
+        if event.type == KEYDOWN:
+            if event.key == K_p:
+                RUNNING = not(RUNNING)
+        
+        if RUNNING:
+            if event.type == ADD_ENEMY:
+                newEnemy = Enemy()
+                enemies.add(newEnemy)
+            elif event.type == UPDATE_SCORE:
+                SCORE += 1
 
-    # Move objects
-    enemies.update(P1)
-    P1.update()
-    
-    # Draw everything
-    DISPLAYSURF.fill(WHITE)
-    P1.draw(DISPLAYSURF)
-    for anEnemy in pygame.sprite.Group.sprites(enemies):
-        anEnemy.draw(DISPLAYSURF)
-    scores = font_score.render(str(SCORE), True, BLACK)
-    DISPLAYSURF.blit(scores, (10, 10))
-    pygame.display.update()
+    if RUNNING:
+        # Move objects
+        enemies.update(P1)
+        P1.update()
+        
+        # Draw everything
+        DISPLAYSURF.fill(WHITE)
+        P1.draw(DISPLAYSURF)
+        for anEnemy in pygame.sprite.Group.sprites(enemies):
+            anEnemy.draw(DISPLAYSURF)
+        scores = font_score.render(str(SCORE), True, BLACK)
+        DISPLAYSURF.blit(scores, (10, 10))
+        pygame.display.update()
 
     # Wait util next frame
     FramePerSec.tick(FPS)
